@@ -73,7 +73,7 @@ resource "aws_db_subnet_group" "default" {
 resource "aws_db_instance" "postgres" {
   identifier              = "ror-db"
   engine                  = "postgres"
-  engine_version          = "13.3"
+  engine_version          = "13.10"
   instance_class          = "db.t3.micro"
   allocated_storage       = 20
   db_name                 = "rorappdb"
