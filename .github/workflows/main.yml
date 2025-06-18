@@ -1,4 +1,3 @@
-
 name: CI/CD
 
 on:
@@ -27,8 +26,13 @@ jobs:
           docker build -t $IMAGE .
           docker push $IMAGE
 
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
       - name: Terraform Init and Apply
+        working-directory: infrastructure
         run: |
-          cd infrastructure
           terraform init
           terraform apply -auto-approve
