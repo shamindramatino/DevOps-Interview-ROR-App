@@ -70,19 +70,19 @@ resource "aws_db_subnet_group" "default" {
   subnet_ids = aws_subnet.public[*].id
 }
 
-# RDS PostgreSQL
 resource "aws_db_instance" "postgres" {
-  identifier         = "ror-db"
-  engine             = "postgres"
-  instance_class     = "db.t3.micro"
-  allocated_storage  = 20
-  name               = "rorappdb"
-  username           = "roruser"
-  password           = "securepassword"
-  skip_final_snapshot = true
-  vpc_security_group_ids = [aws_security_group.rds.id]
-  db_subnet_group_name   = aws_db_subnet_group.default.name
-  publicly_accessible    = false
+  identifier              = "ror-db"
+  engine                  = "postgres"
+  engine_version          = "13.3"
+  instance_class          = "db.t3.micro"
+  allocated_storage       = 20
+  db_name                 = "rorappdb"
+  username                = "roruser"
+  password                = "securepassword"
+  skip_final_snapshot     = true
+  publicly_accessible     = false
+  vpc_security_group_ids  = [aws_security_group.rds.id]
+  db_subnet_group_name    = aws_db_subnet_group.default.name
 }
 
 # Security Groups
