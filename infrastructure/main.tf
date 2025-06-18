@@ -49,8 +49,8 @@ resource "aws_route_table_association" "a" {
   route_table_id = aws_route_table.public.id
 }
 
-# ECR
-resource "aws_ecr_repository" "app" {
+# Use existing ECR repository
+data "aws_ecr_repository" "app" {
   name = "ror-app-repo"
 }
 
@@ -73,7 +73,7 @@ resource "aws_db_subnet_group" "default" {
 resource "aws_db_instance" "postgres" {
   identifier              = "ror-db"
   engine                  = "postgres"
-  engine_version          = "13.10"
+  engine_version          = "13.15"
   instance_class          = "db.t3.micro"
   allocated_storage       = 20
   db_name                 = "rorappdb"
@@ -193,7 +193,7 @@ resource "aws_ecs_task_definition" "app" {
   container_definitions = jsonencode([
     {
       name      = "ror-container",
-      image     = "${aws_ecr_repository.app.repository_url}:latest",
+      image = "${data.aws_ecr_repository.app.repository_url}:latest"
       essential = true,
       portMappings = [
         { containerPort = 3000 }
