@@ -195,17 +195,23 @@ resource "aws_ecs_task_definition" "app" {
       name      = "ror-container",
       image     = "${aws_ecr_repository.app.repository_url}:latest",
       essential = true,
-      portMappings = [{ containerPort = 3000 }],
+      portMappings = [
+        { containerPort = 3000 }
+      ],
       environment = [
-        { name = "DB_HOST", value = aws_db_instance.postgres.address },
-        { name = "DB_NAME", value = aws_db_instance.postgres.name },
-        { name = "DB_USER", value = aws_db_instance.postgres.username },
-        { name = "DB_PASS", value = aws_db_instance.postgres.password },
-        { name = "S3_BUCKET", value = aws_s3_bucket.app.bucket }
+        { name = "RDS_DB_NAME",     value = aws_db_instance.postgres.db_name },
+        { name = "RDS_USERNAME",    value = aws_db_instance.postgres.username },
+        { name = "RDS_PASSWORD",    value = "securepassword" }, # Not accessible via attribute
+        { name = "RDS_HOSTNAME",    value = aws_db_instance.postgres.address },
+        { name = "RDS_PORT",        value = tostring(aws_db_instance.postgres.port) },
+        { name = "S3_BUCKET_NAME",  value = aws_s3_bucket.app.bucket },
+        { name = "S3_REGION_NAME",  value = var.aws_region },
+        { name = "LB_ENDPOINT",     value = aws_lb.app.dns_name }
       ]
     }
   ])
 }
+
 
 resource "aws_lb" "app" {
   name               = "ror-lb"
