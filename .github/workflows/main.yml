@@ -31,19 +31,8 @@ jobs:
         with:
           terraform_version: 1.6.6
 
-      - name: Terraform Init
-        working-directory: infrastructure
-        run: terraform init
-
-      - name: Import existing resources (if needed)
+      - name: Terraform Init and Apply
         working-directory: infrastructure
         run: |
-          terraform import aws_ecr_repository.app ror-app-repo || true
-          terraform import aws_iam_role.ecs_exec ecs-exec-role || true
-          terraform import aws_lb.app ror-lb || true
-          terraform import aws_lb_target_group.app ror-tg || true
-          terraform import aws_db_subnet_group.default ror-db-subnet-group || true
-
-      - name: Terraform Apply
-        working-directory: infrastructure
-        run: terraform destroy -auto-approve
+          terraform init
+          terraform apply -auto-approve
