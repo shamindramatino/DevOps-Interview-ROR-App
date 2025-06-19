@@ -84,11 +84,6 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
-# ECR
-data "aws_ecr_repository" "app" {
-  name = "ror-app-repo"
-}
-
 # S3
 resource "aws_s3_bucket" "app" {
   bucket        = "ror-app-bucket-fixed"
