@@ -224,59 +224,54 @@ data "aws_ecr_repository" "nginx" {
 }
 
 # Task Definitions
-resource "aws_ecs_task_definition" "rails" {
-  family                   = "ror-rails-task"
+resource "aws_ecs_task_definition" "app_combined" {
+  family                   = "ror-app-combined"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = "1024"
   memory                   = "2048"
   execution_role_arn       = aws_iam_role.ecs_exec.arn
-  container_definitions = jsonencode([{
-    name = "rails-app",
-    image = "${data.aws_ecr_repository.app.repository_url}:${var.image_tag}",
-    essential = true,
-    portMappings = [{ containerPort = 3000 }],
-    environment = [
-      { name = "RDS_DB_NAME", value = aws_db_instance.postgres.db_name },
-      { name = "RDS_USERNAME", value = aws_db_instance.postgres.username },
-      { name = "RDS_PASSWORD", value = "securepassword" },
-      { name = "RDS_HOSTNAME", value = aws_db_instance.postgres.address },
-      { name = "RDS_PORT", value = tostring(aws_db_instance.postgres.port) },
-      { name = "S3_BUCKET_NAME", value = aws_s3_bucket.app.bucket },
-      { name = "S3_REGION_NAME", value = var.aws_region }
-    ],
-    logConfiguration = {
-      logDriver = "awslogs",
-      options = {
-        awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name,
-        awslogs-region        = var.aws_region,
-        awslogs-stream-prefix = "rails"
-      }
-    }
-  }])
-}
 
-resource "aws_ecs_task_definition" "nginx" {
-  family                   = "ror-nginx-task"
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-  cpu                      = "256"
-  memory                   = "512"
-  execution_role_arn       = aws_iam_role.ecs_exec.arn
-  container_definitions = jsonencode([{
-    name = "nginx",
-    image = "${data.aws_ecr_repository.nginx.repository_url}:${var.image_tag}",
-    essential = true,
-    portMappings = [{ containerPort = 80 }],
-    logConfiguration = {
-      logDriver = "awslogs",
-      options = {
-        awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name,
-        awslogs-region        = var.aws_region,
-        awslogs-stream-prefix = "nginx"
+  container_definitions = jsonencode([
+    {
+      name  = "rails-app",
+      image = "${data.aws_ecr_repository.app.repository_url}:${var.image_tag}",
+      essential = true,
+      portMappings = [{ containerPort = 3000 }],
+      environment = [
+        { name = "RDS_DB_NAME", value = aws_db_instance.postgres.db_name },
+        { name = "RDS_USERNAME", value = aws_db_instance.postgres.username },
+        { name = "RDS_PASSWORD", value = "securepassword" },
+        { name = "RDS_HOSTNAME", value = aws_db_instance.postgres.address },
+        { name = "RDS_PORT", value = tostring(aws_db_instance.postgres.port) },
+        { name = "S3_BUCKET_NAME", value = aws_s3_bucket.app.bucket },
+        { name = "S3_REGION_NAME", value = var.aws_region }
+      ],
+      logConfiguration = {
+        logDriver = "awslogs",
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name,
+          awslogs-region        = var.aws_region,
+          awslogs-stream-prefix = "rails"
+        }
+      }
+    },
+    {
+      name  = "nginx",
+      image = "${data.aws_ecr_repository.nginx.repository_url}:${var.image_tag}",
+      essential = true,
+      portMappings = [{ containerPort = 80 }],
+      dependsOn = [{ containerName = "rails-app", condition = "HEALTHY" }],
+      logConfiguration = {
+        logDriver = "awslogs",
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name,
+          awslogs-region        = var.aws_region,
+          awslogs-stream-prefix = "nginx"
+        }
       }
     }
-  }])
+  ])
 }
 
 # Load Balancer
@@ -314,38 +309,28 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-# ECS Services
-resource "aws_ecs_service" "rails" {
-  name            = "ror-rails-service"
+resource "aws_ecs_service" "app" {
+  name            = "ror-app-service"
   cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.rails.arn
+  task_definition = aws_ecs_task_definition.app_combined.arn
   desired_count   = 1
   launch_type     = "FARGATE"
-  network_configuration {
-    subnets         = aws_subnet.private[*].id
-    security_groups = [aws_security_group.ecs.id]
-    assign_public_ip = false
-  }
-}
 
-resource "aws_ecs_service" "nginx" {
-  name            = "ror-nginx-service"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.nginx.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
   network_configuration {
     subnets         = aws_subnet.private[*].id
     security_groups = [aws_security_group.ecs.id]
     assign_public_ip = false
   }
+
   load_balancer {
     target_group_arn = aws_lb_target_group.app.arn
     container_name   = "nginx"
     container_port   = 80
   }
+
   depends_on = [aws_lb_listener.http]
 }
+
 
 output "load_balancer_dns" {
   value = aws_lb.app.dns_name
