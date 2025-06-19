@@ -63,11 +63,14 @@ resource "aws_route_table_association" "public" {
 }
 
 # NAT Gateway
-resource "aws_eip" "nat" {}
+resource "aws_eip" "nat" {
+  domain = "vpc"
+}
 
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
   subnet_id     = aws_subnet.public[0].id
+  depends_on    = [aws_internet_gateway.gw]
 }
 
 resource "aws_route_table" "private" {
@@ -84,7 +87,7 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
-# CloudWatch Log Group (simplified to avoid permission issues)
+# CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "ecs_logs" {
   name = "/ecs/ror-task"
 }
