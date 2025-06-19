@@ -84,6 +84,11 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
+resource "aws_cloudwatch_log_group" "ecs_logs" {
+  name              = "/ecs/ror-task"
+  retention_in_days = 7
+}
+
 # S3
 resource "aws_s3_bucket" "app" {
   bucket        = "ror-app-bucket-fixed"
@@ -230,13 +235,29 @@ resource "aws_ecs_task_definition" "app" {
         { name = "S3_BUCKET_NAME",  value = aws_s3_bucket.app.bucket },
         { name = "S3_REGION_NAME",  value = var.aws_region },
         { name = "LB_ENDPOINT",     value = aws_lb.app.dns_name }
-      ]
+      ],
+      logConfiguration = {
+        logDriver = "awslogs",
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name,
+          awslogs-region        = var.aws_region,
+          awslogs-stream-prefix = "rails"
+        }
+      }
     },
     {
       name      = "nginx",
       image     = "${data.aws_ecr_repository.nginx.repository_url}:${var.image_tag}",
       essential = true,
-      portMappings = [{ containerPort = 80 }]
+      portMappings = [{ containerPort = 80 }],
+      logConfiguration = {
+        logDriver = "awslogs",
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name,
+          awslogs-region        = var.aws_region,
+          awslogs-stream-prefix = "nginx"
+        }
+      }
     }
   ])
 }
