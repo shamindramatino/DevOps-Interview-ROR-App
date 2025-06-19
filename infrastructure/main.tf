@@ -261,7 +261,6 @@ resource "aws_ecs_task_definition" "app_combined" {
       image = "${data.aws_ecr_repository.nginx.repository_url}:${var.image_tag}",
       essential = true,
       portMappings = [{ containerPort = 80 }],
-      dependsOn = [{ containerName = "rails-app", condition = "HEALTHY" }],
       logConfiguration = {
         logDriver = "awslogs",
         options = {
