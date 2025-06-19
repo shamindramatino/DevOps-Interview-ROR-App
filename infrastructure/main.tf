@@ -218,7 +218,7 @@ resource "aws_ecs_task_definition" "app" {
   container_definitions = jsonencode([
     {
       name      = "rails-app",
-      image     = "${aws_ecr_repository.app.repository_url}:${var.image_tag}",
+      image     = "${data.aws_ecr_repository.app.repository_url}:${var.image_tag}",
       essential = true,
       portMappings = [{ containerPort = 3000 }],
       environment = [
@@ -234,7 +234,7 @@ resource "aws_ecs_task_definition" "app" {
     },
     {
       name      = "nginx",
-      image     = "${aws_ecr_repository.nginx.repository_url}:${var.image_tag}",
+      image     = "${data.aws_ecr_repository.nginx.repository_url}:${var.image_tag}",
       essential = true,
       portMappings = [{ containerPort = 80 }]
     }
