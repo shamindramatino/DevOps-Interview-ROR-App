@@ -34,7 +34,7 @@ jobs:
           IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "Building Docker image: $IMAGE_URI"
           # Build from project root with Dockerfile in subdirectory
-          docker build -t $IMAGE_URI -f docker/app/Dockerfile .
+          docker build -t $IMAGE_URI -f docker .
           # Push to ECR
           docker push $IMAGE_URI
 
