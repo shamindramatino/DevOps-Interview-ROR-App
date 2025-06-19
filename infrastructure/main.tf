@@ -211,8 +211,8 @@ resource "aws_ecs_task_definition" "app" {
   family                   = "ror-task"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
-  cpu                      = "512"
-  memory                   = "1024"
+  cpu                      = "1024"
+  memory                   = "2048"
   execution_role_arn       = aws_iam_role.ecs_exec.arn
 
   container_definitions = jsonencode([
