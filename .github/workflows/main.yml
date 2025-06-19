@@ -35,11 +35,11 @@ jobs:
           IMAGE_URI_NGINX=$ECR_REGISTRY/ror-app-repo-nginx:${IMAGE_TAG}
 
           echo "Building Rails app image: $IMAGE_URI_APP"
-          docker build -t $IMAGE_URI_APP -f docker/app/Dockerfile ./docker/app
+          docker build -t $IMAGE_URI_APP -f docker/app/Dockerfile .
           docker push $IMAGE_URI_APP
 
           echo "Building NGINX image: $IMAGE_URI_NGINX"
-          docker build -t $IMAGE_URI_NGINX -f docker/nginx/Dockerfile ./docker/nginx
+          docker build -t $IMAGE_URI_NGINX -f docker/nginx/Dockerfile .
           docker push $IMAGE_URI_NGINX
 
       - name: Install Terraform
