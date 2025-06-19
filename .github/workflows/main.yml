@@ -27,12 +27,12 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push Docker image
+      - name: Build and push Rails Docker image
         run: |
-          ECR_REGISTRY=$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com
-          IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker build -t $IMAGE_URI ./docker/app
+          IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/$APP_REPOSITORY:$IMAGE_TAG
+          docker build -t $IMAGE_URI -f docker/app/Dockerfile .  # 👈 context is ., Dockerfile is in subdir
           docker push $IMAGE_URI
+
 
 
       - name: Install Terraform
